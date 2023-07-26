@@ -30,3 +30,5 @@ jobs:
         run: npm install
       - name: List source code with ESLint
         run: npm run lint
+      - name: List source code with Prettier
+        run: npm run format
