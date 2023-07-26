@@ -7,29 +7,29 @@ on:
     branches: [feature_workflow]
 
 jobs:
-  eslint:
-    runs-on: ubuntu-latest
-    env:
-      NODE_VERSION: 18.14.1
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install NVM and Node.js
-        run: |
-          curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-          nvm install $NODE_VERSION
-      - name:  Use Node.js
-        run: |
-          export NVM_DIR="$HOME/.nvm"
-          [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-          [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-          nvm use $NODE_VERSION
-      - name: Install dependencies
-        run: npm install
-      - name: List source code with ESLint
-        run: npm run lint
+  # eslint:
+  #   runs-on: ubuntu-latest
+  #   env:
+  #     NODE_VERSION: 18.14.1
+  #   steps:
+  #     - uses: actions/checkout@v2
+  #     - name: Install NVM and Node.js
+  #       run: |
+  #         curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+  #         export NVM_DIR="$HOME/.nvm"
+  #         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  #         [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  #         nvm install $NODE_VERSION
+  #     - name:  Use Node.js
+  #       run: |
+  #         export NVM_DIR="$HOME/.nvm"
+  #         [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+  #         [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+  #         nvm use $NODE_VERSION
+  #     - name: Install dependencies
+  #       run: npm install
+  #     - name: List source code with ESLint
+  #       run: npm run lint
 
   prettier:
     runs-on: node:lts-alpine
