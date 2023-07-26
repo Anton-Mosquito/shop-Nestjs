@@ -7,11 +7,11 @@ import { CreateDeviceDto } from './dto/create-device.dto';
 export class DeviceService {
   constructor(@InjectModel(Device) private deviceRepository: typeof Device) {}
 
-  async create(@Body() deviceDto: CreateDeviceDto) {
-    const {name, price, brandId, typeId, info} = deviceDto;
-  }
+  // async create(@Body() deviceDto: CreateDeviceDto) {
+  //   const {name, price, brandId, typeId, info} = deviceDto;
+  // }
 
-  async getAllDevices() {}
+  // async getAllDevices() {}
 
-  async getOne() {}
+  // async getOne() {}
 }

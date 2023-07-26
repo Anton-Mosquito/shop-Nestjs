@@ -2,9 +2,9 @@ name: eslint
 
 on: 
   push:
-    branches: [main]
+    branches: [feature_workflow]
   pull_request:
-    branches: [main]
+    branches: [feature_workflow]
 
 jobs:
   eslint:
