@@ -12,12 +12,14 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Install NVM and Node.js
+        env:
+          NODE_VERSION: 18.14.1
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-          nvm install 18.14.1
+          nvm install $NODE_VERSION
       - name:  Use Node.js
         env:
           NODE_VERSION: 18.14.1
@@ -25,7 +27,7 @@ jobs:
           export NVM_DIR="$HOME/.nvm"
           [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
           [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-          nvm use 18.14.1
+          nvm use $NODE_VERSION
       - name: Install dependencies
         run: npm install
       - name: List source code with ESLint
