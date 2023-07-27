@@ -13,6 +13,15 @@ jobs:
       NODE_VERSION: 18.14.1
     steps:
       - uses: actions/checkout@v2
+      - name: Cache node.js modules
+        uses: actions/cache@v2
+        env: 
+          cache-name: npm-${{ hashFiles('package-lock.json')}}
+        with: 
+          path: ~/.npm
+          key: ${{ env.cache-name }}
+          restore-keys: |
+            ${{ env.cache-name }}
       - name: Install NVM and Node.js
         run: |
           curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
