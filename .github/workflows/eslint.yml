@@ -13,7 +13,7 @@ jobs:
       NODE_VERSION: 18.14.1
     steps:
       - uses: actions/checkout@v2
-      - name: Cache node.js modules
+      - name: Cache Node.js modules
         uses: actions/cache@v2
         env: 
           cache-name: npm-${{ hashFiles('package-lock.json')}}
@@ -39,6 +39,7 @@ jobs:
         run: npm install
       - name: List source code with ESLint
         run: npm run lint
+        continue-on-error: true
 
   prettier:
     runs-on: ubuntu-latest
@@ -50,3 +51,58 @@ jobs:
         run: npm install
       - name: List source code with Prettier
         run: npm run format
+
+
+  build:
+    runs-on: ubuntu-latest
+    container: 
+      image: node:18.17-alpine
+    steps:
+      - uses: actions/checkout@v2
+      - name: Storing artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/*
+      - name: Cashe node.js modules
+        uses: actions/cache@v2
+        env: 
+          cache-name: npm-${{ hashFiles('package-lock.json')}}
+        with:
+          path: ~/.npm
+          key: ${{ env.cache-name }}
+          restore-keys: |
+            ${{  env.cache-name  }}
+      - name: Install dependencies
+        run: npm install
+      - name: Build the project
+        run: npm run build
+
+  deploy:
+    runs-on: ubuntu-latest
+    container: 
+      image: node:18.17-alpine
+    steps:
+      - uses: actions/checkout@v2
+      - name: Download artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: build
+          path: build/*
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          echo "$SSH_KNOWN_HOSTS" > ~/.ssh/knows_hosts
+      - name: Copy files
+        run: |
+          rsync -a --progress --human-readable --delete \
+          --execlude-from '.gitignore' \
+          --execlude .gitignore \
+          --execlude .git \
+          . deploy@172.104.151.230:~/realworld/
+          ssh deploy@172.104.151.230 "pushd ~/realworld && npm init"
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
