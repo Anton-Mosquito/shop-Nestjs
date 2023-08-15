@@ -1,0 +1,32 @@
+name: Create review app
+
+on: 
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install SSH key
+        uses: shimataro/ssh-key-action@v2
+        with:
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known_hosts: ${{ secrets.SSH_KSNOWN_HOSTS }}
+      - name: Addong Known Hosts
+        run: ssh_keyscan -H ${{ secrets.SSh_HOST }} >> ~/.ssh/known_hosts
+      - name: Copy files to the server
+        run: |
+          rsync -a -r --progress --human-readble --delete \
+          --execlude-from '.gitignore' \
+          --include-from .deploylist \
+          --execlude public \
+          . deploy@172.104.151.230:~/app/${{ github.head_ref }}/
+      - name: Restarting the app
+        run: |
+          ssh $SSH_USER@$SSH_HOST "cp ~/ecosystem.config.js ~/app/${{github.head_ref}} && pushd ~/app/${{github.head_ref}} &&
+          sed -i 's/realworld-db/${{ github.head_ref }}'" ecosystem.config.js && ./bin/create-db-copy ${{secrets.DB_PASSWORD}} ${{github.head_ref}}
+
+
