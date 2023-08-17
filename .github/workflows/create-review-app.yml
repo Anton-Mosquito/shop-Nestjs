@@ -10,6 +10,7 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: Install SSH key
         uses: shimataro/ssh-key-action@v2
         with:
@@ -19,14 +20,58 @@ jobs:
         run: ssh_keyscan -H ${{ secrets.SSh_HOST }} >> ~/.ssh/known_hosts
       - name: Copy files to the server
         run: |
-          rsync -a -r --progress --human-readble --delete \
-          --execlude-from '.gitignore' \
+          rsync -a -r --progress --human-readable --delete \
+          --exclude-from '.gitignore' \
           --include-from .deploylist \
-          --execlude public \
+          --exclude public \
+          --exclude ecosystem.config.js \
           . deploy@172.104.151.230:~/app/${{ github.head_ref }}/
       - name: Restarting the app
         run: |
-          ssh $SSH_USER@$SSH_HOST "cp ~/ecosystem.config.js ~/app/${{github.head_ref}} && pushd ~/app/${{github.head_ref}} &&
-          sed -i 's/realworld-db/${{ github.head_ref }}'" ecosystem.config.js && ./bin/create-db-copy ${{secrets.DB_PASSWORD}} ${{github.head_ref}}
-
-
+          ssh $SSH_USER@$SSH_HOST "cp ~/ecosystem.config.js ~/app/${{github.head_ref}}/ && pushd ~/app/${{github.head_ref}} &&
+          sed -i 's/realworld-db/${{ github.head_ref }}/' ecosystem.config.js && ./bin/create-db-copy ${{secrets.DB_PASSWORD}} ${{github.head_ref}} &&
+          npm install && pm2 restart ecosystem.config.js --name ${{ github.head_ref }} --env production --update-env &&
+          popd"
+        env:
+          SSH_USER: ${{ secrets.SSH_USER }}
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+  review:
+    needs: deploy
+    runs-on: ubuntu-latest
+    steps:
+      - id: check-branch
+        uses: octokit/request-action@v2.x
+        with:
+          route: GET /repos/{owner}/{repo}/git/ref/:ref
+          owner: vitallium
+          repo: react-redux-realworld-example-app
+          ref: ${{ github.head_ref }}
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+        - if: steps.check-branch.output.status == 200
+        name: Trigger frontend review app
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/actions/workflow/publish-review-app.yml/dispatches
+          owner: vitallium
+          repo: react-redux-realworld-example-app
+          ref: ${{ github.head_ref }}
+          input: |
+            refName: ${{ github.head_ref }}
+            dst: ${{ github.head_ref }}
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        - if: steps.check-branch.output.status != 200
+        name: Trigger frontend review app
+        uses: octokit/request-action@v2.x
+        with:
+          route: POST /repos/{owner}/{repo}/actions/workflow/publish-review-app.yml/dispatches
+          owner: vitallium
+          repo: react-redux-realworld-example-app
+          ref: main
+          input: |
+            refName: "main"
+            dst: ${{ github.head_ref }}
+        env: 
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
